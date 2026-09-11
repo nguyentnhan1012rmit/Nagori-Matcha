@@ -1,5 +1,37 @@
-import { useMemo, useState } from 'react';
-import { CalendarDays, ChevronDown, Clock3, MapPin, Menu as MenuIcon, Users, X } from 'lucide-react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { CalendarDays, ChevronDown, Clock3, MapPin, Menu as MenuIcon, ShoppingBag, Users, X } from 'lucide-react';
+import OrderPage from './components/OrderPage';
+
+/* ── Scroll Reveal Hook ── */
+function useScrollReveal() {
+  const ref = useRef(null);
+
+  useEffect(() => {
+    const root = ref.current;
+    if (!root) return;
+
+    const targets = root.querySelectorAll(
+      '.scroll-reveal, .scroll-reveal-left, .scroll-reveal-right, .scroll-reveal-scale, .stagger-children'
+    );
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('visible');
+            observer.unobserve(entry.target);
+          }
+        });
+      },
+      { threshold: 0.12, rootMargin: '0px 0px -40px 0px' }
+    );
+
+    targets.forEach((el) => observer.observe(el));
+    return () => observer.disconnect();
+  }, []);
+
+  return ref;
+}
 
 const COPY = {
   vi: {
@@ -40,49 +72,125 @@ export default function App() {
   const [menuGroup, setMenuGroup] = useState('Signature');
   const [bookingType, setBookingType] = useState('table');
   const [success, setSuccess] = useState(false);
+  const [page, setPage] = useState(window.location.hash === '#order' ? 'order' : 'home');
   const t = COPY[lang];
   const visibleMenu = useMemo(() => MENU.find((g) => g.group === menuGroup), [menuGroup]);
   const links = [['story',t.nav.story],['menu',t.nav.menu],['workshop',t.nav.workshop],['space',t.nav.space],['contact',t.nav.contact]];
   const submit = (e) => { e.preventDefault(); setSuccess(true); e.currentTarget.reset(); };
+  const shellRef = useScrollReveal();
 
-  return <div className="site-shell">
+  // Hash-based routing
+  useEffect(() => {
+    const onHash = () => setPage(window.location.hash === '#order' ? 'order' : 'home');
+    window.addEventListener('hashchange', onHash);
+    return () => window.removeEventListener('hashchange', onHash);
+  }, []);
+
+  const goToOrder = useCallback(() => {
+    window.location.hash = '#order';
+    window.scrollTo(0, 0);
+  }, []);
+
+  const goHome = useCallback(() => {
+    window.location.hash = '';
+    window.scrollTo(0, 0);
+  }, []);
+
+  // ── Order Page ──
+  if (page === 'order') {
+    return <OrderPage lang={lang} onBack={goHome} />;
+  }
+
+  return <div className="site-shell" ref={shellRef}>
     <header className="topbar">
       <a href="#top" className="wordmark" aria-label="Nagori home">Nagori</a>
       <nav className="desktop-nav" aria-label="Primary navigation">{links.map(([id,label]) => <a key={id} href={`#${id}`}>{label}</a>)}</nav>
-      <div className="topbar-actions"><button className="lang-switch" onClick={() => setLang(lang === 'vi' ? 'en' : 'vi')}>{lang === 'vi' ? 'EN' : 'VI'}</button><a href="#reserve" className="reserve-link">{t.reserve}</a><button className="mobile-toggle" onClick={() => setMobileOpen(!mobileOpen)} aria-label="Menu">{mobileOpen ? <X size={20}/> : <MenuIcon size={20}/>}</button></div>
+      <div className="topbar-actions"><button className="lang-switch" onClick={() => setLang(lang === 'vi' ? 'en' : 'vi')}>{lang === 'vi' ? 'EN' : 'VI'}</button><a href="#order" className="order-nav-link" title={lang === 'vi' ? 'Đặt nước' : 'Order'}><ShoppingBag size={16}/></a><a href="#reserve" className="reserve-link">{t.reserve}</a><button className="mobile-toggle" onClick={() => setMobileOpen(!mobileOpen)} aria-label="Menu">{mobileOpen ? <X size={20}/> : <MenuIcon size={20}/>}</button></div>
     </header>
     {mobileOpen && <div className="mobile-nav">{links.map(([id,label]) => <a key={id} href={`#${id}`} onClick={() => setMobileOpen(false)}>{label}</a>)}<a href="#reserve" onClick={() => setMobileOpen(false)}>{t.reserve}</a></div>}
 
     <main id="top">
+      {/* ── Hero ── */}
       <section className="hero">
-        <div className="hero-copy"><p className="eyebrow">{t.heroEyebrow}</p><h1><span>{t.heroTitle1}</span><em>{t.heroTitle2}</em></h1><p className="hero-intro">{t.heroText}</p><div className="hero-actions"><a href="#menu" className="btn btn-light">{t.exploreMenu}</a><a href="#workshop" className="btn btn-outline">{t.bookWorkshop}</a></div></div>
+        <div className="hero-copy"><p className="eyebrow">{t.heroEyebrow}</p><h1><span>{t.heroTitle1}</span><em>{t.heroTitle2}</em></h1><p className="hero-intro">{t.heroText}</p><div className="hero-actions"><a href="#menu" className="btn btn-light">{t.exploreMenu}</a><a href="#order" className="btn btn-outline"><ShoppingBag size={16} style={{marginRight:6}}/>{lang === 'vi' ? 'Đặt nước' : 'Order now'}</a></div></div>
         <div className="hero-media"><img src="/nagori/exterior-wide.jpg" alt="Nagori matcha lounge exterior" /><div className="hero-seal"><strong>抹茶</strong><span>NAGORI</span></div></div>
         <p className="hero-note">Matcha · People · Places · Moments</p>
       </section>
 
-      <section id="story" className="story section-pad"><div className="story-image image-frame"><img src="/nagori/matcha-bar.jpg" alt="Nagori open matcha bar" loading="lazy" /></div><div className="story-copy"><p className="kicker">{t.storyKicker}</p><h2>{t.storyTitle}</h2><p>{t.storyText}</p><div className="fine-rule"/><span className="micro">Uji matcha · hand-whisked · seasonal expression</span></div></section>
-
-      <section id="menu" className="menu-section section-pad">
-        <div className="menu-heading"><div><p className="kicker">{t.menuKicker}</p><h2>{t.menuTitle}</h2></div><p>{t.menuText}</p></div>
-        <div className="menu-tabs" role="tablist">{MENU.map(({group}) => <button key={group} onClick={() => setMenuGroup(group)} className={menuGroup === group ? 'active' : ''}>{group}</button>)}</div>
-        <div className="menu-list">{visibleMenu.items.map(([name,price,desc],i) => <article className="menu-item" key={name}><span className="menu-number">{String(i+1).padStart(2,'0')}</span><div><h3>{name}</h3><p>{desc}</p></div><strong>{price}</strong></article>)}</div>
-        <div className="season-grid-title"><p className="kicker">{t.seasonal}</p></div><div className="season-grid">{SEASONS.map(([season,name,desc]) => <article key={name}><span>{season}</span><h3>{name}</h3><p>{desc}</p></article>)}</div>
-        <div className="addons"><p className="kicker">{t.addOns}</p><div className="addons-grid"><div><span>Milk</span><p>Meiji +10K · Almond +10K · Oat +15K</p></div><div><span>360ml</span><p>Matcha 2 +15K · Matcha 3 +20K · Matcha 4 +35K</p></div><div><span>460ml</span><p>Matcha 2 +20K · Matcha 3 +25K · Matcha 4 +45K</p></div></div></div>
+      {/* ── Story ── */}
+      <section id="story" className="story section-pad">
+        <div className="story-image image-frame scroll-reveal-left"><img src="/nagori/matcha-bar.jpg" alt="Nagori open matcha bar" loading="lazy" /></div>
+        <div className="story-copy scroll-reveal-right"><p className="kicker">{t.storyKicker}</p><h2>{t.storyTitle}</h2><p>{t.storyText}</p><div className="fine-rule"/><span className="micro">Uji matcha · hand-whisked · seasonal expression</span></div>
       </section>
 
-      <section id="workshop" className="workshop-section"><div className="workshop-image"><img src="/nagori/zen-display.jpg" alt="Nagori seasonal matcha display" loading="lazy" /></div><div className="workshop-copy"><p className="kicker light">{t.workshopKicker}</p><h2>{t.workshopTitle}</h2><p>{t.workshopText}</p><div className="workshop-facts"><div><Clock3 size={19}/><span>{t.duration}</span></div><div><Users size={19}/><span>{t.capacity}</span></div><div><CalendarDays size={19}/><span>{t.schedule}</span></div></div><div className="slot-row"><span>10:00–12:00</span><span>14:30–16:30</span><span>18:30–20:30</span></div><div className="workshop-price"><span>{t.price}</span><strong>{t.priceBlank}</strong></div><p className="policy">{t.workshopPolicy}</p><a href="#reserve" className="btn btn-light">{t.reserveWorkshop}</a></div></section>
+      {/* ── Menu ── */}
+      <section id="menu" className="menu-section section-pad">
+        <div className="menu-heading scroll-reveal"><div><p className="kicker">{t.menuKicker}</p><h2>{t.menuTitle}</h2></div><p>{t.menuText}</p></div>
+        <div className="menu-tabs" role="tablist">{MENU.map(({group}) => <button key={group} onClick={() => setMenuGroup(group)} className={menuGroup === group ? 'active' : ''}>{group}</button>)}</div>
+        <div className="menu-list stagger-children visible">{visibleMenu.items.map(([name,price,desc],i) => <article className="menu-item" key={name}><span className="menu-number">{String(i+1).padStart(2,'0')}</span><div><h3>{name}</h3><p>{desc}</p></div><strong>{price}</strong></article>)}</div>
+        <div className="season-grid-title scroll-reveal"><p className="kicker">{t.seasonal}</p></div>
+        <div className="season-grid stagger-children">{SEASONS.map(([season,name,desc]) => <article key={name}><span>{season}</span><h3>{name}</h3><p>{desc}</p></article>)}</div>
+        <div className="addons scroll-reveal"><p className="kicker">{t.addOns}</p><div className="addons-grid"><div><span>Milk</span><p>Meiji +10K · Almond +10K · Oat +15K</p></div><div><span>360ml</span><p>Matcha 2 +15K · Matcha 3 +20K · Matcha 4 +35K</p></div><div><span>460ml</span><p>Matcha 2 +20K · Matcha 3 +25K · Matcha 4 +45K</p></div></div></div>
+      </section>
 
-      <section id="space" className="space-section section-pad"><div className="space-heading"><p className="kicker">{t.spaceKicker}</p><h2>{t.spaceTitle}</h2></div><div className="space-grid"><article><img src="/nagori/lounge.jpg" alt="Nagori first floor lounge" loading="lazy"/><span>01 · Floor One</span><p>{t.spaceText1}</p></article><article className="space-card-offset"><img src="/nagori/tatami-room.jpg" alt="Nagori second floor Japanese low seating" loading="lazy"/><span>02 · Floor Two</span><p>{t.spaceText2}</p></article></div></section>
+      {/* ── Workshop ── */}
+      <section id="workshop" className="workshop-section">
+        <div className="workshop-image"><img src="/nagori/zen-display.jpg" alt="Nagori seasonal matcha display" loading="lazy" /></div>
+        <div className="workshop-copy scroll-reveal-right">
+          <p className="kicker light">{t.workshopKicker}</p><h2>{t.workshopTitle}</h2><p>{t.workshopText}</p>
+          <div className="workshop-facts stagger-children visible"><div><Clock3 size={19}/><span>{t.duration}</span></div><div><Users size={19}/><span>{t.capacity}</span></div><div><CalendarDays size={19}/><span>{t.schedule}</span></div></div>
+          <div className="slot-row"><span>10:00–12:00</span><span>14:30–16:30</span><span>18:30–20:30</span></div>
+          <div className="workshop-price"><span>{t.price}</span><strong>{t.priceBlank}</strong></div>
+          <p className="policy">{t.workshopPolicy}</p><a href="#reserve" className="btn btn-light">{t.reserveWorkshop}</a>
+        </div>
+      </section>
 
-      <section id="reserve" className="reserve-section section-pad"><div className="reserve-intro"><p className="kicker">{t.bookingKicker}</p><h2>{t.bookingTitle}</h2><p>{t.bookingText}</p></div><div className="booking-card"><div className="booking-tabs"><button onClick={() => {setBookingType('table');setSuccess(false)}} className={bookingType === 'table' ? 'active' : ''}>{t.tableTab}</button><button onClick={() => {setBookingType('workshop');setSuccess(false)}} className={bookingType === 'workshop' ? 'active' : ''}>{t.workshopTab}</button></div><form onSubmit={submit}><div className="field-grid">
-        <label><span>{t.name}</span><input required name="name" /></label><label><span>{t.phone}</span><input required type="tel" name="phone" /></label><label><span>{t.email}</span><input required type="email" name="email" /></label><label><span>{t.date}</span><input required type="date" name="date" /></label>
-        <label><span>{t.time}</span><div className="select-wrap"><select required name="time" defaultValue=""><option value="" disabled>—</option>{(bookingType === 'workshop' ? ['10:00','14:30','18:30'] : ['08:30','10:00','11:30','13:00','14:30','16:00','17:30','19:00','20:00']).map(x => <option key={x}>{x}</option>)}</select><ChevronDown size={15}/></div></label><label><span>{t.guests}</span><input required type="number" min="1" max={bookingType === 'workshop' ? '12' : '10'} defaultValue="2" name="guests" /></label>
-        </div><label className="note-field"><span>{t.note}</span><textarea rows="3" name="note" /></label><button className="submit-btn" type="submit">{bookingType === 'table' ? t.submitTable : t.submitWorkshop}</button>{success && <p className="success-message">{t.formSuccess}</p>}</form></div></section>
+      {/* ── Space ── */}
+      <section id="space" className="space-section section-pad">
+        <div className="space-heading scroll-reveal"><p className="kicker">{t.spaceKicker}</p><h2>{t.spaceTitle}</h2></div>
+        <div className="space-grid">
+          <article className="scroll-reveal-left"><img src="/nagori/lounge.jpg" alt="Nagori first floor lounge" loading="lazy"/><span>01 · Floor One</span><p>{t.spaceText1}</p></article>
+          <article className="space-card-offset scroll-reveal-right"><img src="/nagori/tatami-room.jpg" alt="Nagori second floor Japanese low seating" loading="lazy"/><span>02 · Floor Two</span><p>{t.spaceText2}</p></article>
+        </div>
+      </section>
 
-      <section id="contact" className="contact-section"><div className="contact-image"><img src="/nagori/exterior-detail.jpg" alt="Nagori storefront detail" loading="lazy" /></div><div className="contact-copy"><p className="kicker light">{t.contactKicker}</p><h2>{t.contactTitle}</h2><div className="contact-lines"><p><MapPin size={18}/><span>{t.address}</span></p><p><Clock3 size={18}/><span>{t.hours}</span></p><a href="tel:+84901234567">{t.phoneValue}</a><a href="mailto:hello@nagori.vn">{t.emailValue}</a><a href="#contact">{t.instagramValue}</a></div></div></section>
+      {/* ── Reservations ── */}
+      <section id="reserve" className="reserve-section section-pad">
+        <div className="reserve-intro scroll-reveal-left"><p className="kicker">{t.bookingKicker}</p><h2>{t.bookingTitle}</h2><p>{t.bookingText}</p></div>
+        <div className="booking-card scroll-reveal-scale">
+          <div className="booking-tabs"><button onClick={() => {setBookingType('table');setSuccess(false)}} className={bookingType === 'table' ? 'active' : ''}>{t.tableTab}</button><button onClick={() => {setBookingType('workshop');setSuccess(false)}} className={bookingType === 'workshop' ? 'active' : ''}>{t.workshopTab}</button></div>
+          <form onSubmit={submit}>
+            <div className="field-grid">
+              <label><span>{t.name}</span><input required name="name" /></label>
+              <label><span>{t.phone}</span><input required type="tel" name="phone" /></label>
+              <label><span>{t.email}</span><input required type="email" name="email" /></label>
+              <label><span>{t.date}</span><input required type="date" name="date" /></label>
+              <label><span>{t.time}</span><div className="select-wrap"><select required name="time" defaultValue=""><option value="" disabled>—</option>{(bookingType === 'workshop' ? ['10:00','14:30','18:30'] : ['08:30','10:00','11:30','13:00','14:30','16:00','17:30','19:00','20:00']).map(x => <option key={x}>{x}</option>)}</select><ChevronDown size={15}/></div></label>
+              <label><span>{t.guests}</span><input required type="number" min="1" max={bookingType === 'workshop' ? '12' : '10'} defaultValue="2" name="guests" /></label>
+            </div>
+            <label className="note-field"><span>{t.note}</span><textarea rows="3" name="note" /></label>
+            <button className="submit-btn" type="submit">{bookingType === 'table' ? t.submitTable : t.submitWorkshop}</button>
+            {success && <p className="success-message">{t.formSuccess}</p>}
+          </form>
+        </div>
+      </section>
+
+      {/* ── Contact ── */}
+      <section id="contact" className="contact-section">
+        <div className="contact-image"><img src="/nagori/exterior-detail.jpg" alt="Nagori storefront detail" loading="lazy" /></div>
+        <div className="contact-copy scroll-reveal-right">
+          <p className="kicker light">{t.contactKicker}</p><h2>{t.contactTitle}</h2>
+          <div className="contact-lines stagger-children visible">
+            <p><MapPin size={18}/><span>{t.address}</span></p>
+            <p><Clock3 size={18}/><span>{t.hours}</span></p>
+            <a href="tel:+84901234567">{t.phoneValue}</a>
+            <a href="mailto:hello@nagori.vn">{t.emailValue}</a>
+            <a href="#contact">{t.instagramValue}</a>
+          </div>
+        </div>
+      </section>
     </main>
 
     <footer><span className="footer-wordmark">Nagori</span><p>{t.footer}</p><span>© 2026 Nagori</span></footer>
   </div>;
 }
-

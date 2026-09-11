@@ -1,18 +1,23 @@
-# Mangrover Slow Living Retreat
+# Nagori Matcha
 
-A premium, single-page eco-luxury landing website for the **Mangrover Slow Living Retreat** — a seasonal, low-impact glamping experience set within the Dần Xây Mangrove Ecosystem of the Cần Giờ Biosphere Reserve, near Ho Chi Minh City.
+A premium, single-page landing website for **Nagori**, a Japanese Matcha Lounge located in Phú Mỹ Hưng, Ho Chi Minh City. 
+
+The website offers a modern, elegant web experience with scroll-triggered animations, dual-language support (VI/EN), and a fully functional drink ordering cart system.
 
 ---
 
 ## 🌿 Concept
 
-This is not a traditional resort. It is a minimal, intentional retreat designed for restoration, reconnection, and reflection — built on three core pillars:
+Nagori is designed to provide a quiet pause in the middle of the city. The digital experience reflects this through a clean, biophilic aesthetic, utilizing glassmorphism, fluid animations, and premium AI-generated imagery.
 
-| Pillar | Focus |
-|---|---|
-| **Restore** | Mental & physical reset through yoga, meditation, and low stimulation |
-| **Reconnect** | Nature immersion via mangrove kayaking and local ecological activities |
-| **Regenerate** | Active conservation through tree planting and QR-tagged impact tracking |
+The core sections of the site include:
+- **Hero:** Impactful introduction with dual CTAs.
+- **Story:** Brand philosophy focusing on the concept of "Nagori" (a lingering trace).
+- **Menu:** Interactive menu tabs showcasing Signature drinks, Matcha, Cold Brew & Tea, and Seasonal offerings.
+- **Workshop:** Information and booking details for matcha workshops.
+- **Space:** A showcase of the two distinct floors (open matcha bar & traditional tatami room).
+- **Reservations:** A beautiful glass-frosted form for booking tables or workshop slots.
+- **Order Page:** A dedicated, hash-routed page (`#order`) featuring a complete drink menu, customization options (size, milk), and a sliding shopping cart drawer.
 
 ---
 
@@ -21,31 +26,24 @@ This is not a traditional resort. It is a minimal, intentional retreat designed 
 | Tool | Version / Notes |
 |---|---|
 | **React** | v19 with Vite |
-| **Tailwind CSS** | v4 via `@tailwindcss/vite` plugin |
-| **Lucide React** | Icon library |
-| **Google Fonts** | Playfair Display (headings) · Inter (body) |
+| **CSS** | Custom vanilla CSS with Tailwind v4 `@tailwindcss/vite` base |
+| **Lucide React** | Icon library for UI elements |
+| **Google Fonts** | Bodoni Moda (headings) · Manrope (body) |
 
 ---
 
 ## 🎨 Design System
 
 ### Color Palette
-| Token | Hex | Use |
-|---|---|---|
-| `linen` | `#F9F8F6` | Page background |
-| `cream` | `#FDF9F3` | Alternate section background |
-| `forest` | `#2C4C3B` | Primary CTAs, accents |
-| `charred` | `#3B332C` | Body text, headings |
-| `amber` | `#D4A373` | Highlights, overlines |
-
-### Typography
-- **Headings**: Playfair Display (italic variants for emphasis)
-- **Body**: Inter (300–600 weight range)
+- `paper` / `white`: Warm, cream-based backgrounds
+- `ink` / `deep`: Dark forest greens and charcoal for text and heavy elements
+- `matcha`: Signature vibrant matcha green
+- `amber`: Golden accent color for hover states, buttons, and badges
+- `soft`: Muted greens/grays for secondary text
 
 ### Animations
-- Scroll-triggered fade-up via custom `useScrollAnimation` IntersectionObserver hook
-- Staggered child reveal via `useScrollAnimationGroup`
-- CSS keyframes: `fade-in`, `fade-in-up`, `gentle-bounce`, `soft-pulse`
+- **IntersectionObserver:** Custom `useScrollReveal()` hook in `App.jsx` triggers CSS animations when elements enter the viewport.
+- **CSS Keyframes:** `fadeInUp`, `fadeInLeft`, `fadeInRight`, `scaleIn`, `sealPulse`, `floatGentle` for smooth, micro-interactions.
 
 ---
 
@@ -54,57 +52,30 @@ This is not a traditional resort. It is a minimal, intentional retreat designed 
 ```
 src/
 ├── components/
-│   ├── Navbar.jsx          # Fixed nav with scroll-spy active links
-│   ├── Hero.jsx            # Full-screen hero with dual CTAs
-│   ├── Philosophy.jsx      # Brand philosophy + image
-│   ├── Pillars.jsx         # 3-pillar experience cards
-│   ├── Experiences.jsx     # 4 experience image cards with hover reveal
-│   ├── Sustainability.jsx  # 4 sustainability commitment cards
-│   ├── Accommodation.jsx   # Glamping model overview + CTA
-│   ├── Gallery.jsx         # 6-image grid with lightbox (arrows + keyboard)
-│   ├── Location.jsx        # Location cards + Google Maps embed
-│   ├── CallToAction.jsx    # Full-bleed booking CTA section
-│   ├── Footer.jsx          # Links, contact, social, copyright
-│   ├── RoomsPage.jsx       # Booking page (hash-routed to #rooms)
-│   ├── BookingModal.jsx    # Frontend booking form modal with success screen
-│   └── BackToTop.jsx       # Floating back-to-top button
-├── hooks/
-│   └── useScrollAnimation.js  # IntersectionObserver scroll hooks
-├── assets/
-│   └── hero.png            # Local hero asset (also at /public/images/)
-├── App.jsx                 # Hash-based routing (/ vs #rooms)
+│   └── OrderPage.jsx       # Dedicated drink ordering page with cart state
+├── App.jsx                 # Main landing page component & hash routing
 ├── main.jsx                # React entry point
-└── index.css               # Tailwind v4 @theme tokens + global styles
+└── index.css               # Comprehensive custom styles & Tailwind setup
 public/
-├── favicon.png             # Mangrove tree logo (used as favicon)
-├── icons.svg               # SVG icon set
-└── images/                 # All page images (AI-generated)
-    ├── hero.png
-    ├── philosophy.png
-    ├── accommodation.png
-    ├── accommodation1–4.png
-    ├── experience-yoga.png
-    ├── experience-kayak.png
-    ├── experience-planting.png
-    ├── experience-bbq.png
-    ├── spa.png
-    ├── gallery-aerial.png
-    ├── gallery-boardwalk.png
-    ├── gallery-fireflies.png
-    └── gallery-sunset.png
+├── favicon.png             # Site favicon
+└── nagori/                 # Premium AI-generated imagery
+    ├── exterior-wide.jpg
+    ├── matcha-bar.jpg
+    ├── zen-display.jpg
+    ├── exterior-detail.jpg
+    ├── lounge.jpg
+    └── tatami-room.jpg
 ```
 
 ---
 
 ## ✨ Features
 
-- **Hash-based routing** — `/` (landing) and `#rooms` (booking page), no React Router needed
-- **Scroll-spy navbar** — active link highlights with animated underline as sections enter view
-- **Gallery lightbox** — prev/next arrows, keyboard navigation (← → Esc), dot indicators
-- **Booking modal** — frontend form with room pre-selection, date pickers, success screen
-- **Back-to-top button** — appears after 400px scroll with smooth animation
-- **Lazy loading** — all non-hero images use `loading="lazy"`
-- **Fully responsive** — mobile drawer nav, stacked layouts on small screens
+- **Hash-based routing** — Seamlessly switches between the landing page (`/`) and the order system (`#order`) without React Router.
+- **Bilingual Support** — Built-in toggle to switch between Vietnamese (VI) and English (EN) dynamically.
+- **Scroll Animations** — Directional reveals (left, right, up, scale) that trigger natively as the user scrolls down the landing page.
+- **Shopping Cart System** — Full frontend cart logic in `OrderPage.jsx` allowing users to customize drinks (size, milk), manage quantities, and "checkout".
+- **Responsive Design** — Custom CSS media queries ensure the site looks stunning on desktop, tablet, and mobile.
 
 ---
 
@@ -126,13 +97,3 @@ Open [http://localhost:5173](http://localhost:5173) in your browser.
 npm run build
 npm run preview
 ```
-
----
-
-## 📸 Imagery
-
-All images are high-quality AI-generated assets designed to match the retreat's biophilic aesthetic. Replace with real photography before going live.
-
----
-
-*Designed with care for the Cần Giờ Biosphere.*
